@@ -1,0 +1,268 @@
+Q1. Detect Cycle in a Graph using DFS
+To detect a cycle in a graph using DFS, we can use a recursive approach to keep track of nodes in the current path.
+
+Here's the code to detect a cycle in a graph using DFS:
+
+java
+Copy code
+import java.util.*;
+
+class GraphCycle {
+    private final int V;
+    private final List<List<Integer>> adj;
+
+    public GraphCycle(int V) {
+        this.V = V;
+        adj = new ArrayList<>(V);
+        for (int i = 0; i < V; i++) {
+            adj.add(new ArrayList<>());
+        }
+    }
+
+    // Add edge to graph
+    void addEdge(int v, int w) {
+        adj.get(v).add(w);
+    }
+
+    // Helper method to detect cycle
+    private boolean isCyclicUtil(int i, boolean[] visited, boolean[] recStack) {
+        if (recStack[i])
+            return true;
+        if (visited[i])
+            return false;
+
+        visited[i] = true;
+        recStack[i] = true;
+        List<Integer> children = adj.get(i);
+
+        for (Integer c : children)
+            if (isCyclicUtil(c, visited, recStack))
+                return true;
+
+        recStack[i] = false;
+        return false;
+    }
+
+    // Method to check if graph contains a cycle
+    boolean isCyclic() {
+        boolean[] visited = new boolean[V];
+        boolean[] recStack = new boolean[V];
+
+        for (int i = 0; i < V; i++)
+            if (isCyclicUtil(i, visited, recStack))
+                return true;
+
+        return false;
+    }
+
+    public static void main(String[] args) {
+        GraphCycle graph = new GraphCycle(4);
+        graph.addEdge(0, 1);
+        graph.addEdge(1, 2);
+        graph.addEdge(2, 3);
+        graph.addEdge(3, 0);
+
+        if (graph.isCyclic())
+            System.out.println("Graph contains cycle");
+        else
+            System.out.println("Graph doesn't contain cycle");
+    }
+}
+Q2. Check if a Directed Graph is a DAG
+To check if a directed graph is a DAG, we can use the topological sorting method. If we can complete a topological sort without encountering a cycle, the graph is a DAG.
+
+Here's the code to check if a graph is a DAG:
+
+java
+Copy code
+import java.util.*;
+
+class GraphDAG {
+    private final int V;
+    private final List<List<Integer>> adj;
+
+    public GraphDAG(int V) {
+        this.V = V;
+        adj = new ArrayList<>(V);
+        for (int i = 0; i < V; i++) {
+            adj.add(new ArrayList<>());
+        }
+    }
+
+    // Add edge to graph
+    void addEdge(int v, int w) {
+        adj.get(v).add(w);
+    }
+
+    // Helper method to perform topological sort
+    private boolean topologicalSortUtil(int v, boolean[] visited, boolean[] recStack, Stack<Integer> stack) {
+        if (recStack[v])
+            return false;
+        if (visited[v])
+            return true;
+
+        visited[v] = true;
+        recStack[v] = true;
+        for (Integer i : adj.get(v))
+            if (!topologicalSortUtil(i, visited, recStack, stack))
+                return false;
+
+        recStack[v] = false;
+        stack.push(v);
+        return true;
+    }
+
+    // Method to check if graph is a DAG
+    boolean isDAG() {
+        boolean[] visited = new boolean[V];
+        boolean[] recStack = new boolean[V];
+        Stack<Integer> stack = new Stack<>();
+
+        for (int i = 0; i < V; i++)
+            if (!topologicalSortUtil(i, visited, recStack, stack))
+                return false;
+
+        return true;
+    }
+
+    public static void main(String[] args) {
+        GraphDAG graph = new GraphDAG(4);
+        graph.addEdge(0, 1);
+        graph.addEdge(1, 2);
+        graph.addEdge(2, 3);
+        graph.addEdge(3, 0); // Introduce cycle
+
+        if (graph.isDAG())
+            System.out.println("Graph is a DAG");
+        else
+            System.out.println("Graph is not a DAG");
+    }
+}
+Q3. Find Least-Cost Path with Exactly m Edges
+To find the least-cost path in a weighted digraph with exactly m edges, we can use dynamic programming. We maintain a table dp[i][j] where i is the number of edges and j is the destination node, and dp[i][j] represents the minimum cost to reach j from the source with i edges.
+
+Here's the code to find the least-cost path with exactly m edges:
+
+java
+Copy code
+import java.util.Arrays;
+
+class GraphLeastCostPath {
+    private final int V;
+    private final int[][] adj;
+
+    public GraphLeastCostPath(int V) {
+        this.V = V;
+        adj = new int[V][V];
+        for (int[] row : adj)
+            Arrays.fill(row, Integer.MAX_VALUE);
+    }
+
+    // Add edge to graph
+    void addEdge(int u, int v, int weight) {
+        adj[u][v] = weight;
+    }
+
+    // Method to find least-cost path with exactly m edges
+    int findLeastCostPath(int src, int dest, int m) {
+        int[][] dp = new int[m + 1][V];
+        for (int[] row : dp)
+            Arrays.fill(row, Integer.MAX_VALUE);
+        dp[0][src] = 0;
+
+        for (int e = 1; e <= m; e++) {
+            for (int i = 0; i < V; i++) {
+                if (dp[e - 1][i] != Integer.MAX_VALUE) {
+                    for (int j = 0; j < V; j++) {
+                        if (adj[i][j] != Integer.MAX_VALUE) {
+                            dp[e][j] = Math.min(dp[e][j], dp[e - 1][i] + adj[i][j]);
+                        }
+                    }
+                }
+            }
+        }
+        return dp[m][dest];
+    }
+
+    public static void main(String[] args) {
+        GraphLeastCostPath graph = new GraphLeastCostPath(4);
+        graph.addEdge(0, 1, 2);
+        graph.addEdge(0, 2, 1);
+        graph.addEdge(1, 2, 2);
+        graph.addEdge(1, 3, 1);
+        graph.addEdge(2, 3, 3);
+
+        int src = 0, dest = 3, m = 2;
+        int result = graph.findLeastCostPath(src, dest, m);
+        if (result != Integer.MAX_VALUE)
+            System.out.println("Least cost path with " + m + " edges is " + result);
+        else
+            System.out.println("No path with " + m + " edges.");
+    }
+}
+Q4. Number of Routes with Exactly m Edges
+To find the total number of routes from a source to a destination with exactly m edges, we can use a DFS approach with memoization.
+
+Here's the code:
+
+java
+Copy code
+import java.util.*;
+
+class GraphRoutes {
+    private final int V;
+    private final List<List<Integer>> adj;
+
+    public GraphRoutes(int V) {
+        this.V = V;
+        adj = new ArrayList<>(V);
+        for (int i = 0; i < V; i++) {
+            adj.add(new ArrayList<>());
+        }
+    }
+
+    // Add edge to graph
+    void addEdge(int v, int w) {
+        adj.get(v).add(w);
+    }
+
+    // Method to find total number of routes with exactly m edges
+    int countRoutesUtil(int u, int v, int m, int[][] memo) {
+        if (m == 0 && u == v)
+            return 1;
+        if (m == 0)
+            return 0;
+
+        if (memo[u][m] != -1)
+            return memo[u][m];
+
+        int count = 0;
+        for (int i : adj.get(u))
+            count += countRoutesUtil(i, v, m - 1, memo);
+
+        memo[u][m] = count;
+        return count;
+    }
+
+    int countRoutes(int u, int v, int m) {
+        int[][] memo = new int[V][m + 1];
+        for (int[] row : memo)
+            Arrays.fill(row, -1);
+
+        return countRoutesUtil(u, v, m, memo);
+    }
+
+    public static void main(String[] args) {
+        GraphRoutes graph = new GraphRoutes(4);
+        graph.addEdge(0, 1);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 2);
+        graph.addEdge(1, 3);
+        graph.addEdge(2, 3);
+
+        int src = 0, dest = 3, m = 2;
+        System.out.println("Total number of routes with " + m + " edges: " + graph.countRoutes(src, dest, m));
+    }
+}
+Q5. Check if a Graph has an Eulerian Path
+To check if a graph has an Eulerian path, we need to check the degree of each vertex. A directed graph has an Eulerian path if and only if at most one vertex has (out-degree) - (in-degree) = 1, at most one vertex has (in-degree) - (
